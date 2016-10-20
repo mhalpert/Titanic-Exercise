@@ -1,0 +1,121 @@
+---
+title: "Data Wrangling Exercise 2: Titanic"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+By: Michael Halpert
+Date: 10.20.2016
+
+
+```{r}
+
+# Loading the gdata, stringr, tidyr, and dplyr packages:
+library(gdata)
+library(stringr)
+library(tidyr)
+library(dplyr)
+```
+
+0: Load the data in RStudio
+
+Save the data set as a CSV file called titanic_original.csv and load it in RStudio into a data frame.
+
+```{r}
+
+# Loading files and saving original version as .csv
+
+titanic_df <- read.xls("titanic3.xls", sheet = 1, stringsAsFactors = FALSE)
+write.csv(titanic_df, file ="titanic_original.csv")
+```
+
+1: Port of embarkation
+
+The embarked column has some missing values, which are known to correspond to passengers who actually embarked at Southampton. Find the missing values and replace them with S. (Caution: Sometimes a missing value might be read into R as a blank or empty string.)
+
+
+```{r}
+
+# Replacing empty values with Southampton
+
+titanic_df$embarked[which(titanic_df$embarked=="")] <- "S"
+
+```
+
+
+
+2: Age
+
+You’ll notice that a lot of the values in the Age column are missing. While there are many ways to fill these missing values, using the mean or median of the rest of the values is quite common in such cases.
+
+Calculate the mean of the Age column and use that value to populate the missing values
+
+Think about other ways you could have populated the missing values in the age column. Why would you pick any of those over the mean (or not)?
+
+```{r}
+
+# calculating the mean age
+mean_age <- mean(titanic_df$age, na.rm = TRUE)
+
+# replacing NA values with mean age
+titanic_df$age[is.na(titanic_df$age)] <- mean_age
+
+#Some other ways to populate the missing values might have been to sample people who have spouses and children on the boat.  If they have kids, we could use the average of people who have children.  If they have siblings we can use the average of people who have siblings.  This would give us the average ages of adult and average ages of kids. 
+
+```
+
+
+3: Lifeboat
+
+You’re interested in looking at the distribution of passengers in different lifeboats, but as we know, many passengers did not make it to a boat :-( This means that there are a lot of missing values in the boat column. Fill these empty slots with a dummy value e.g. the string 'None' or 'NA'
+
+```{r}
+
+#Filling empty lifeboat values with NA.
+
+titanic_df$boat[which(titanic_df$boat=="")] <- "NA"
+
+```
+
+
+4: Cabin
+
+You notice that many passengers don’t have a cabin number associated with them.
+
+Does it make sense to fill missing cabin numbers with a value?  What does a missing value here mean?
+
+You have a hunch that the fact that the cabin number is missing might be a useful indicator of survival. Create a new column has_cabin_number which has 1 if there is a cabin number, and 0 otherwise.
+
+```{r}
+
+# Missing cabins don't neccisarily need a value.  They can get a dummy value such as NA.  A missing value likely means that no one survived to report the cabin number, or the passengar was in third class.  It seems that most third class passengars did not have a cabin. 
+
+titanic_df$has_cabin_number <- "1"
+titanic_df$has_cabin_number[which(titanic_df$cabin=="")] <- "0"
+
+# Did everyone who had a cabin survive?
+
+titanic_df$has_cabin_number == titanic_df$survived 
+
+# It appaers that not all people with cabin numbers did survive.  However, on closer inspection of the data it appears that most cabin numbers were reported if the passenger had a family member survive. 
+
+titanic_df$has_cabin_number == titanic_df$survived | titanic_df$sibsp >= 1 | titanic_df$parch >= 1
+
+```
+
+
+6: Submit the project on Github
+
+Include your code, the original data as a CSV file titanic_original.csv, and the cleaned up data as a CSV file called titanic_clean.csv
+
+```{r}
+
+write.csv(titanic_df, file ="titanic_clean.csv")
+
+```
+
+
+
